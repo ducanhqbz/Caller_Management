@@ -1,0 +1,15 @@
+.Leftside{
+    float: left;
+    width: 20%;
+    height: 100%;
+
+}
+
+.Rightside{
+    float: right;
+    width: 80%;
+    height: 100%;
+
+}
+
+

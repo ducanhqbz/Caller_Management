@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <link rel="stylesheet" type="text/css" href="/css/Dashboard.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</head>
+<body>
+<div th:replace="home :: navbar"></div>
+
+<!-- Hidden input to check for the existence of userForEdit -->
+<input type="hidden" id="userForEditFlag" th:value="${userForEdit != null ? 'true' : 'false'}">
+
+<div class="row">
+    <div class="col-md-3 Leftside">
+        <div class="list-group">
+            <button onclick="window.location.href='/Dashboard'" class="list-group-item list-group-item-action">
+                <i class="fa-solid fa-inbox fa-lg me-3"></i> DashBoard
+            </button>
+            <button onclick="window.location.href='/ShowAll'" class="list-group-item list-group-item-action active">
+                <i class="fa-solid fa-envelope-open fa-lg me-3"></i> Show All
+            </button>
+            <button data-bs-toggle="modal" data-bs-target="#InsertModal" class="list-group-item list-group-item-action">
+                <i class="fa-solid fa-envelope-open fa-lg me-3"></i> Insert
+            </button>
+        </div>
+    </div>
+    <div class="col-md-9 Rightside">
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">UserName</th>
+                <th scope="col">First Name</th>
+                <th scope="col">Last Name</th>
+                <th scope="col">Full Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="user, stat : ${list}">
+                <th scope="row" th:text="${stat.count}"></th>
+                <td th:text="${user.username}"></td>
+                <td th:text="${user.firstName}"></td>
+                <td th:text="${user.lastName}"></td>
+                <td th:text="${user.firstName + ' ' + user.lastName}"></td>
+                <td th:text="${user.email}"></td>
+                <td>
+                    <button type="button" th:data-email="${user.email}" th:onclick="DeleteBtn(this.getAttribute('data-email'))" class="btn btn-primary">Delete</button>
+                    <button type="button" th:data-id="${user.id}" th:onclick="EditBtn(this.getAttribute('data-id'))" class="btn btn-primary">Edit</button>
+                    <button type="button" class="btn btn-primary" th:data-id="${user.id}" onclick="openAddTaskModal(this)" data-bs-toggle="modal" data-bs-target="#AddTask">Add Task
+                    </button>
+
+
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <nav aria-label="Page navigation" style="margin: 0 30%">
+            <ul class="pagination">
+                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                    <a class="page-link" th:href="@{/ShowAll(page=${currentPage - 1}, size=${size})}">Previous</a>
+                </li>
+                <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" th:classappend="${i == currentPage} ? 'active'">
+                    <a class="page-link" th:href="@{/ShowAll(page=${i}, size=${size})}" th:text="${i + 1}"></a>
+                </li>
+                <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                    <a class="page-link" th:href="@{/ShowAll(page=${currentPage + 1}, size=${size})}">Next</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+<!--add TAsk-->
+<div class="modal fade" tabindex="-1" id="AddTask" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Add Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="/AddTask">
+            <div class="modal-body">
+                <!-- Display User ID as a read-only input -->
+                <div class="mb-3">
+                    <label for="userIdInput" class="form-label">User ID</label>
+                    <input type="text" id="userIdInput" name="idUser" class="form-control" readonly> <!-- Hiển thị ID dưới dạng input chỉ đọc -->
+                </div>
+
+                <div class="form-floating mb-3">
+                    <select name="department" class="form-select" id="floatingSelect1234" disabled
+                            onchange="this.setAttribute('disabled', true)">
+                        <option value="" disabled selected>Choose a department</option>
+                        <option
+                                th:each="department : ${listDepartment}"
+                                th:value="${department.id}"
+                                th:text="${department.department_name}"
+                                th:selected="${department.id == userLogin.departmentId}">
+                        </option>
+                    </select>
+                    <label for="floatingSelect2">Department</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <select name="assignment" class="form-select" required>
+                        <option value="" disabled selected>Choose an Auth Assignment</option>
+                        <option th:each="auth : ${listAuth}" th:value="${auth}" th:text="${auth}"></option>
+                    </select>
+                    <label>Auth Assignment</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-subtle" data-bs-dismiss="modal">Secondary Action</button>
+                <button type="submit" class="btn btn-primary">Confirm</button>
+            </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+
+
+<!-- Modal for adding a new user -->
+<div class="modal fade" id="InsertModal" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-center">Insert User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="/Insert">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <input name="email" placeholder="Email" type="email" id="inputEmails" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <input name="password" placeholder="Password" type="password" id="inputPassword5" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <div class="input-group">
+                            <span class="input-group-text">@</span>
+                            <input type="text" class="form-control" placeholder="Username" name="username" required>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col">
+                            <input name="first" type="text" class="form-control" placeholder="First name" required>
+                        </div>
+                        <div class="col">
+                            <input name="last" type="text" class="form-control" placeholder="Last name" required>
+                        </div>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="floatingSelect123" disabled>
+                            <option value="" disabled selected>Choose a department</option>
+                            <option
+                                    th:each="department : ${listDepartment}"
+                                    th:value="${department.id}"
+                                    th:text="${department.department_name}"
+                                    th:selected="${department.id == userLogin.departmentId}">
+                            </option>
+                        </select>
+                        <input type="hidden" name="department" th:value="${userLogin.departmentId}" />
+                        <label for="floatingSelect123">Department</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <select name="assignment" class="form-select" required>
+                            <option value="" disabled selected>Choose an Auth Assignment</option>
+                            <option  th:each="auth : ${listAuth}" th:value="${auth}" th:text="${auth}"></option>
+                        </select>
+                        <label>Auth Assignment</label>
+                    </div>
+                </div>
+                <div class="modal-footer d-flex justify-content-center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for editing an existing user -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog shadow">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm" method="post" action="/Update">
+                    <div th:if="${userForEdit != null}">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input readonly type="text" id="username" name="username" th:value="${userForEdit.username}" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label for="firstName" class="form-label">First Name</label>
+                            <input type="text" id="firstName" name="firstName" th:value="${userForEdit.firstName}" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label for="lastName" class="form-label">Last Name</label>
+                            <input type="text" id="lastName" name="lastName" th:value="${userForEdit.lastName}" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label for="fullName" class="form-label">Full Name</label>
+                            <input type="text" id="fullName" name="fullName" th:value="${userForEdit.fullName}" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input readonly type="email" id="email" name="email" th:value="${userForEdit.email}" class="form-control">
+                        </div>
+                        <div class="form-floating mb-3">
+                            <select name="department" class="form-select" id="floatingSelect2" >
+
+                                <option value="" disabled selected>Choose a department</option>
+                                <option
+                                        th:each="department : ${listDepartment}"
+                                        th:value="${department.id}"
+                                        th:text="${department.department_name}"
+                                        th:selected="${department.id == userForEdit.departmentId}">
+                                </option>
+                            </select>
+                            <label for="floatingSelect2">Department</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.querySelector('form').addEventListener('submit', function() {
+        document.getElementById('floatingSelect123').removeAttribute('disabled');
+    });
+    document.querySelector('form').addEventListener('submit', function() {
+        document.getElementById('floatingSelect1234').removeAttribute('disabled');
+    });
+</script>
+<!-- Script to handle modal opening based on userForEdit existence -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var userForEditExists = document.getElementById("userForEditFlag").value;
+        if (userForEditExists === 'true') {
+            var editUserModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+            editUserModal.show();
+        }
+    });
+
+    function DeleteBtn(email) {
+        if (confirm("Are you sure you want to delete this user with Username: " + email + "?")) {
+            window.location.href = "/deleteEmail/" + email;
+        } else {
+            alert("Cancel Delete");
+        }
+    }
+
+    function EditBtn(id) {
+        if (id) {
+            window.location.href = "/GetObject/" + id;
+        }
+    }
+</script>
+
+<script th:inline="javascript">
+    var status = /*[[${status}]]*/ 'null';
+    if (status !== 'null') {
+        alert("Status is: " + status);
+    }
+</script>
+<script>
+    function openAddTaskModal(button) {
+        // Lấy User ID từ thuộc tính data-id của button
+        var userId = button.getAttribute('data-id');
+        // Tìm input để hiển thị ID
+        var userIdInput = document.getElementById('userIdInput');
+        if (userIdInput) {
+            // Hiển thị ID trong input (chỉ đọc)
+            userIdInput.value = userId;
+        } else {
+            console.error('Không tìm thấy phần tử để hiển thị User ID.');
+        }
+    }
+
+</script>
+
+
+</body>
+</html>
