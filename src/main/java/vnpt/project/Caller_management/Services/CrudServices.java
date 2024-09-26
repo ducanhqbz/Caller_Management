@@ -1,6 +1,9 @@
 package vnpt.project.Caller_management.Services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import vnpt.project.Caller_management.model.Auth_Assignment;
@@ -24,20 +27,40 @@ public class CrudServices {
     @Autowired
     AuthAssignmentRepository authAssignmentRepository;
 
+    @Autowired
+    AuthAssignmentRepository authRepo;
+
     public long getUnixTimeStamp() {
-        // Step 1: Get the current LocalDateTime
+
         LocalDateTime localDateTime = LocalDateTime.now();
 
-        // Step 2: Convert LocalDateTime to an Instant (using UTC offset)
         long unixTimestamp = localDateTime.toEpochSecond(ZoneOffset.UTC);
         return unixTimestamp;
     }
+    public User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
+        if (authentication != null && authentication.isAuthenticated()) {
+            Object principal = authentication.getPrincipal();
+
+            if (principal instanceof UserDetails) {
+                String email = ((UserDetails) principal).getUsername();
+User user = userRepository.findByEmail(email);
+user.setListPermission(authRepo.findByUserId(user.getId()));
+                return user;
+
+
+            }
+        }
+
+        return null;  // Nếu không tìm thấy thông tin người dùng đang đăng nhập
+    }
     public boolean Update(String email, String username, String firstName, String lastName, int departmentId) {
 
         User user = userRepository.findByEmail(email);
 
         if (user != null) {
+            authRepo.updateDepartment(user.getId(), departmentId ,user.getDepartmentId());
             user.setEmail(email);
 
             user.setUsername(username);
@@ -46,6 +69,7 @@ public class CrudServices {
             user.setDepartmentId(departmentId);
             user.setActive(1);
             user.setUpdateAt(crudServices.getUnixTimeStamp());
+
             User userSave = userRepository.save(user);
 
             return true;

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Theme Toggle</title>
+    <script src="https://kit.fontawesome.com/c16026731d.js" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<div class="ThemeToggle">
+    <input type="checkbox" name="ThemeToggle" id="ThemeToggle" class="ThemeToggle--input">
+    <label class="ThemeToggle--toggle" for="ThemeToggle">
+        <div class="ThemeToggle--toggle-handle"></div>
+        <div class="ThemeToggle--toggle-handle-icon ThemeToggle--sun">
+            <i class="fa-sharp fa-solid fa-sun"></i>
+        </div>
+        <div class="ThemeToggle--toggle-handle-icon ThemeToggle--moon">
+            <i class="fa-solid fa-moon"></i>
+        </div>
+    </label>
+</div>
+
+<script>
+    // Dark mode toggle logic
+    const darkModeKey = 'dark-mode-enabled';
+
+    function isDarkModeEnabled() {
+        return localStorage.getItem(darkModeKey) === 'true';
+    }
+
+    function toggleDarkMode() {
+        const darkModeEnabled = isDarkModeEnabled();
+        if (darkModeEnabled) {
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem(darkModeKey, 'false');
+        } else {
+            document.body.classList.add('dark-mode');
+            localStorage.setItem(darkModeKey, 'true');
+        }
+    }
+
+    // Check initial mode
+    if (isDarkModeEnabled()) {
+        document.getElementById('ThemeToggle').checked = true;
+        document.body.classList.add('dark-mode');
+    } else {
+        document.body.classList.remove('dark-mode');
+    }
+
+    // Event listener for the toggle
+    document.getElementById('ThemeToggle').addEventListener('click', () => {
+        toggleDarkMode();
+    });
+
+    // Tooltip initialization if using Bootstrap tooltips
+    $(document).ready(function() {
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+</script>
+
+<style>
+    /* Example styles for dark mode */
+    .dark-mode {
+        background-color: #121212;
+        color: #ffffff;
+    }
+
+    body {
+        background-color: #ffffff;
+        color: #000000;
+    }
+</style>
+</body>
+</html>

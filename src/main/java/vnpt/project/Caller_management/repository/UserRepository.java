@@ -30,8 +30,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
 
     boolean existsByUsername(String username);
-
-    void deleteByEmail(String email);
+void deleteByEmail(String email);
 
     @Transactional
     default boolean deleteUserByEmail(String email) {

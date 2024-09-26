@@ -13,4 +13,5 @@ public interface DepartmentRepository extends JpaRepository<Departments, Integer
     public Departments findByid(int id);
   public  Page<Departments> findAll(Pageable pageable);
  public List<Departments> findAll();
+
 }

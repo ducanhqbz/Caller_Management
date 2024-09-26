@@ -28,12 +28,10 @@ public class LoginServices implements UserDetailsService {
 
     private static final Logger logger = Logger.getLogger(LoginServices.class.getName());
 
-    @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         // Tìm kiếm user qua email
         Optional<User> userOptional = Optional.ofNullable(repo.findByEmail(email));
 
-        // Nếu email không tồn tại, trả về user với vai trò "ROLE_Guests"
         if (userOptional.isEmpty()) {
             logger.warning("Email không tồn tại: " + email);
             // Trả về một người dùng mặc định với quyền "ROLE_Guests"
@@ -52,6 +50,7 @@ public class LoginServices implements UserDetailsService {
         // Trả về UserDetails với danh sách quyền
         return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword_hash(), authorities);
     }
+
 
     public List<GrantedAuthority> getAuthorities(int userID, int departmentID) {
         List<GrantedAuthority> authorities = new ArrayList<>();
