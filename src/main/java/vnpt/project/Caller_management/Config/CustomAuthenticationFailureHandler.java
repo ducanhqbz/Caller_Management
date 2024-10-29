@@ -3,9 +3,9 @@ package vnpt.project.Caller_management.Config;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
-
 
 import java.io.IOException;
 
@@ -14,20 +14,24 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
                                         AuthenticationException exception) throws IOException, ServletException {
-        // Kiểm tra xem ngoại lệ có phải do mật khẩu không khớp
-        if (exception.getMessage().contains("Bad credentials")) {
-            // Thực hiện xử lý khi mật khẩu không đúng
-            System.out.println("Mật khẩu không đúng!");
+        // Log the failure
 
-            // Bạn có thể lưu thêm thông tin vào request để hiển thị cho người dùng
+        System.out.println("DAy la onauthentication failure");
+        System.out.println("Login failed: " + exception.getMessage());
 
-            request.setAttribute("errorMessage", "Mật khẩu không chính xác. Vui lòng thử lại.");
+        // Redirect only if the response has not been committed
+//        if (!response.isCommitted()) {
+            String errorMessage = "Invalid email or password. Please try again.";
+            request.getSession().setAttribute("error", errorMessage);
+
+            // Set the default failure URL
             super.setDefaultFailureUrl("/loginPage?error=true");
-            super.onAuthenticationFailure(request, response, exception);
-        }
 
-        // Chuyển hướng về trang login với thông báo lỗi
-        super.setDefaultFailureUrl("/loginPage?error=true");
-        super.onAuthenticationFailure(request, response, exception);
+            // Perform the redirect
+            super.onAuthenticationFailure(request, response, exception);
+//        } else {
+//            // If the response is committed, log the situation and avoid further redirects
+//            System.out.println("Response has already been committed, cannot redirect.");
+//        }
     }
 }

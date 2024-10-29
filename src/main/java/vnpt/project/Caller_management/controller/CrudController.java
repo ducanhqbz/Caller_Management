@@ -97,7 +97,7 @@ public class CrudController {
         User userLogin = crudServices.getCurrentUser();
         for (Auth_Assignment authAssignment : userLogin.getListPermission()) {
 
-            if (authAssignment.getName().equalsIgnoreCase("SYSADMIN")){
+            if (authAssignment.getName().equalsIgnoreCase("SYSADMIN")) {
                 User user = userRepository.findById(id);
                 if (user != null) {
                     System.out.println("This is Get object");
@@ -112,68 +112,11 @@ public class CrudController {
         return "redirect:/ShowAll";
     }
 
+
+
     //--------------------------------------------------------------------
-    @PostMapping("/AddTask")
-    @PreAuthorize("hasRole('SYSADMIN')")
-    public String AddTask(@RequestParam("idUser") int idUser,
-                          @RequestParam("department") int department,
-                          @RequestParam("assignment") String assignment,
-                          RedirectAttributes redirectAttributes) {
-        System.out.println(idUser);
-        System.out.println(department);
-        System.out.println(assignment);
-        boolean status = crudServices.AddTask(idUser, department, assignment);
-        if (status == true) {
-            redirectAttributes.addAttribute("status", "Add Task successfull");
-
-        } else {
-            redirectAttributes.addAttribute("status", "Add Task failed");
-
-        }
-        return "redirect:/ShowAll";
-    }
 
 
-
-    @GetMapping("/GetTask/{id}/{departmentid}")
-    public String getTask(@PathVariable int id, @PathVariable int departmentid,
-                          @RequestParam(value = "page", defaultValue = "0") int page,
-                          @RequestParam(value = "size", defaultValue = "153`") int size,
-                          Model model) {
-        // Tạo Pageable để phân trang với các thông số page và size
-        Pageable pageable = PageRequest.of(page, size);
-
-        // Lấy thông tin người dùng đang đăng nhập
-        User userLogin = crudServices.getCurrentUser();
-
-        // Tạo trang rỗng cho Auth_Assignment
-        Page<Auth_Assignment> listAuth = Page.empty();
-
-        // Kiểm tra quyền hạn của người dùng và department
-        for (Auth_Assignment authAssignment : userLogin.getListPermission()) {
-            if (authAssignment.getName().equalsIgnoreCase("SYSADMIN") &&
-                    authAssignment.getDepartment() == departmentid) {
-
-                // Tìm danh sách Auth_Assignment dựa trên userId và phân trang
-                listAuth = authAssignmentRepository.findByUserId(id, pageable);
-
-                // Nếu danh sách có dữ liệu, đưa vào model để truyền sang view
-                if (!listAuth.isEmpty()) {
-                    model.addAttribute("listAuth", listAuth);
-                    model.addAttribute("currentPage", page);
-                    model.addAttribute("totalPages", listAuth.getTotalPages());
-                    model.addAttribute("size", size);
-                } else {
-                    // Nếu không có dữ liệu, thông báo cho người dùng
-                    model.addAttribute("message", "No tasks found for this user.");
-                }
-                break;
-            }
-        }
-
-        // Trả về template AuthManager để hiển thị dữ liệu
-        return "AuthManager";
-    }
 
 
 
@@ -186,12 +129,12 @@ public class CrudController {
                          @RequestParam("email") String email,
                          @RequestParam("department") int departmentId,
                          RedirectAttributes redirectAttributes) {
-User userLogin = crudServices.getCurrentUser();
+        User userLogin = crudServices.getCurrentUser();
         for (Auth_Assignment authAssignment : userLogin.getListPermission()) {
 
-            if (authAssignment.getName().equalsIgnoreCase("SYSADMIN")&&
-            authAssignment.getDepartment()==departmentId
-            ){
+            if (authAssignment.getName().equalsIgnoreCase("SYSADMIN") &&
+                    authAssignment.getDepartment() == departmentId
+            ) {
                 User user = userRepository.findByEmail(email);
 
                 // Kiểm tra nếu user không tồn tại

@@ -1,0 +1,11 @@
+.BtnDropDownRole {
+    width: 64%;
+    border-color: #006fff;
+    background: white;
+    color: black;
+}
+.scrollable-dropdown {
+    max-height: 200px; /* Chiều cao tối đa của danh sách */
+    overflow-y: scroll; /* Kích hoạt thanh cuộn dọc */
+    padding: 0.5rem; /* Tùy chọn: Khoảng cách trong phần tử */
+}

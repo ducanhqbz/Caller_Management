@@ -27,9 +27,10 @@
                 <button data-bs-toggle="modal" data-bs-target="#InsertModal" class="list-group-item list-group-item-action">
                     <i class="fa-solid fa-envelope-open fa-lg me-3"></i> Insert
                 </button>
-                <button data-bs-toggle="modal" data-bs-target="#InsertModal" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-envelope-open fa-lg me-3"></i> Call Manager
-                </button>
+             
+                <button onclick="window.location.href='/GetAllCDr'" class="list-group-item list-group-item-action active">
+                    <i class="fa-solid fa-envelope-open fa-lg me-3"></i> Show All Call
+                  </button>
             </div>
         </div>
 
@@ -74,9 +75,7 @@
                                 class="btn btn-primary"
                                 th:data-id="${user.id}"
                                 th:data-department-id="${user.departmentId}"
-                                onclick="GetTask(this)"
-                        data-bs-toggle="modal"
-                        data-bs-target="#AddTask">
+                                onclick="GetTask(this)">
                         Task
                         </button>
 
