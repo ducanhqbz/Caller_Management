@@ -12,17 +12,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vnpt.project.Caller_management.Services.CrudServices;
 import vnpt.project.Caller_management.Services.TaskServices;
-import vnpt.project.Caller_management.model.Auth_Assignment;
-import vnpt.project.Caller_management.model.Departments;
-import vnpt.project.Caller_management.model.User;
-import vnpt.project.Caller_management.repository.AuthAssignmentRepository;
-import vnpt.project.Caller_management.repository.AuthItemRepository;
-import vnpt.project.Caller_management.repository.DepartmentRepository;
-import vnpt.project.Caller_management.repository.UserRepository;
+import vnpt.project.Caller_management.model.*;
+import vnpt.project.Caller_management.repository.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Controller
 public class TaskController {
@@ -43,6 +36,9 @@ public class TaskController {
     AuthItemRepository authItemRepository;
     @Autowired
     private TaskServices taskServices;
+
+    @Autowired
+    private AuthItemChildRepository authItemChildRepository;
 
     @GetMapping("/deleteAuth/{id}/{departmentid}/{userId}")
     public String deleteAuth(@PathVariable int id, @PathVariable int departmentid, @PathVariable int userId, RedirectAttributes redirectAttributes) {
@@ -261,8 +257,18 @@ public class TaskController {
         return "redirect:/GetTask/" + userTask.getId() + "/" + userTask.getDepartmentId();
     }
 
+@GetMapping("/GetChild/{itemName}")
+@ResponseBody
+public Map<String,List<String>> GetTask(@PathVariable String itemName) {
+    HashMap<String,List<String>> response = new HashMap<>();
+    List<String> listautim = authItemChildRepository.findByParent(itemName);
+    response.put("list",listautim);
+    return  response;
+
+}
 
     @GetMapping("/ChooseTask/{departmentId}/{userId}")
+    @PreAuthorize("hasRole('SYSADMIN')")
     public String ChooseTask(@PathVariable int departmentId,
                              @PathVariable int userId, Model model,
                              @RequestParam(value = "status", required = false) String status
@@ -283,10 +289,10 @@ public class TaskController {
                     }
                 }
             }
-            List<String> ListPermission = authItemRepository.findByType(2);
+
             List<String> ListRole = authItemRepository.findByType(1);
             model.addAttribute("listDepartment", listDepartment);
-            model.addAttribute("ListPermission", ListPermission);
+
             model.addAttribute("ListRole", ListRole);
 
             model.addAttribute("UserInTask", userRepository.findById(userId));
@@ -294,7 +300,7 @@ public class TaskController {
         if (status != null) {
             model.addAttribute("status", status);
         }
-        return "/AddTask";
+        return "AddTask";
     }
 
     ;

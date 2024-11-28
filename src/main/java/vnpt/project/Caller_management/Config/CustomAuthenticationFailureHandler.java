@@ -20,7 +20,7 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
         System.out.println("Login failed: " + exception.getMessage());
 
         // Redirect only if the response has not been committed
-//        if (!response.isCommitted()) {
+
             String errorMessage = "Invalid email or password. Please try again.";
             request.getSession().setAttribute("error", errorMessage);
 
@@ -29,9 +29,6 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
 
             // Perform the redirect
             super.onAuthenticationFailure(request, response, exception);
-//        } else {
-//            // If the response is committed, log the situation and avoid further redirects
-//            System.out.println("Response has already been committed, cannot redirect.");
-//        }
+
     }
 }

@@ -8,6 +8,17 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <link rel="stylesheet" href="/css/AddTaskStyle.css">
+    <style>
+        .scrollable-dropdown {
+            max-height: 200px; /* Giới hạn chiều cao tối đa */
+            overflow-y: auto; /* Kích hoạt cuộn dọc */
+        }
+
+        .dropdown-item {
+            white-space: nowrap; /* Không xuống dòng cho nội dung */
+        }
+    </style>
+
 </head>
 <body>
 <div th:replace="~{home :: navbar}"></div>
@@ -38,48 +49,52 @@
                     <div th:text="${UserInTask.firstName + ' ' + UserInTask.lastName}" class="form-control" readonly></div>
                     <input type="hidden" th:value="${UserInTask.id}" name="userID" id="inputPassword6" class="form-control">
                 </div>
-                <div class="row me-3">
-                    <div class="container col-md-5">
-                        <label for="multiSelectDropdownRole">Select Role </label>
-                        <div class="dropdown">
-                            <button class="btn BtnDropDownRole btn-success dropdown-toggle"
-                                    type="button"
-                                    id="multiSelectDropdownRole"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false">
-                                Select
-                            </button>
-                            <ul class="dropdown-menu scrollable-dropdown" aria-labelledby="multiSelectDropdownRole">
-                                <li th:each="role : ${ListRole}">
-                                    <label>
-                                        <input type="checkbox" name="roles" th:value="${role}">
-                                        <span th:text="${role}"></span>
-                                    </label>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div class="container col-md-5">
-                            <label for="multiSelectDropdownPermission">Select Permission </label>
+                <div class="row">
+                    <!-- Role Selection -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="multiSelectDropdownRole">Select Role</label>
                             <div class="dropdown">
-                                <button class="btn BtnDropDownRole btn-success dropdown-toggle"
+                                <button class="btn btn-success dropdown-toggle"
+                                        type="button"
+                                        id="multiSelectDropdownRole"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false">
+                                    Select
+                                </button>
+                                <ul class="dropdown-menu scrollable-dropdown" aria-labelledby="multiSelectDropdownRole">
+                                    <li th:each="role : ${ListRole}">
+                                        <label class="dropdown-item">
+                                            <input  onchange="updateSelectedRoles()" type="checkbox" name="roles" th:value="${role}">
+                                            <span th:text="${role}"></span>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Permission Selection -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="multiSelectDropdownPermission">Select Permission</label>
+                            <div class="dropdown">
+                                <button class="btn btn-success dropdown-toggle"
                                         type="button"
                                         id="multiSelectDropdownPermission"
                                         data-bs-toggle="dropdown"
                                         aria-expanded="false">
                                     Select
                                 </button>
-                                <ul class="dropdown-menu scrollable-dropdown" aria-labelledby="multiSelectDropdownPermission">
-                                    <li th:each="permission : ${ListPermission}">
-                                        <label>
-                                            <input type="checkbox" name="permissions" th:value="${permission}">
-                                            <span th:text="${permission}"></span>
-                                        </label>
-                                    </li>
+                                <ul id="dropdownPermission" class="dropdown-menu scrollable-dropdown" aria-labelledby="multiSelectDropdownPermission">
+
                                 </ul>
                             </div>
                         </div>
+                    </div>
 
+                    <!-- Department Selection -->
+                    <div class="col-md-4">
                         <div class="form-floating">
                             <select required name="department" class="form-select" aria-label="Floating label select example">
                                 <option value="" disabled selected>Select a department</option>
@@ -87,17 +102,91 @@
                             </select>
                             <label>Select Department</label>
                         </div>
+                    </div>
+                </div>
 
-                        <div style="margin-right: 21%; margin-top: 5%;" class="d-grid gap-2 col-6 mx-auto">
+                <div style="margin-right: 21%; margin-top: 5%;" class="d-grid gap-2 col-6 mx-auto">
                             <button class="btn btn-primary" type="submit">Submit</button>
                         </div>
 
-                    </div>
-                </div>
+
+
             </form>
         </div>
 
+
     </div>
 </div>
+<script>
+    function updateSelectedRoles() {
+        const checkboxes = document.querySelectorAll('input[name="roles"]');
+        const permissionDropdown = document.getElementById('dropdownPermission');
+
+        // Lưu trạng thái của các checkbox đã được check
+        const checkedPermissions = new Set();
+        const existingCheckboxes = permissionDropdown.querySelectorAll('input[name="permissions"]:checked');
+        existingCheckboxes.forEach(checkbox => {
+            checkedPermissions.add(checkbox.value);
+        });
+
+        // Lặp qua từng checkbox
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                fetch(`/GetChild/${checkbox.value}`, { method: 'GET' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (Array.isArray(data.list)) {
+                            data.list.forEach(item => {
+                                // Kiểm tra nếu <li> với giá trị permission đã tồn tại
+                                const existingItem = permissionDropdown.querySelector(`input[name="permissions"][value="${item}"]`);
+                                if (!existingItem) {
+                                    // Nếu chưa tồn tại, tạo <li> mới
+                                    const elementPermission = document.createElement("li");
+                                    elementPermission.setAttribute("data-role", checkbox.value); // Thêm data-role để liên kết với role
+                                    elementPermission.innerHTML = `
+                                        <label class="dropdown-item">
+                                            <input type="checkbox" name="permissions" value="${item}">
+                                            <span>${item}</span>
+                                        </label>
+                                    `;
+                                    permissionDropdown.appendChild(elementPermission);
+
+
+                                    const newCheckbox = elementPermission.querySelector('input[name="permissions"]');
+                                    if (checkedPermissions.has(item)) {
+                                        newCheckbox.checked = true;
+                                    }
+                                }
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error(`Error fetching data for role ${checkbox.value}:`, error);
+                    });
+            } else {
+                // Nếu checkbox bị uncheck, xóa các <li> liên quan đến role đó
+                const itemsToRemove = permissionDropdown.querySelectorAll(`li[data-role="${checkbox.value}"]`);
+                itemsToRemove.forEach(item => {
+                    // Bỏ check tất cả các permission liên quan trước khi xóa
+                    const permissionCheckbox = item.querySelector('input[name="permissions"]');
+                    if (permissionCheckbox) {
+                        permissionCheckbox.checked = false;
+                    }
+                    item.remove();
+                });
+            }
+        });
+    }
+
+    // Gắn sự kiện 'change' cho tất cả checkbox khi trang được tải
+    document.addEventListener('DOMContentLoaded', () => {
+        const checkboxes = document.querySelectorAll('input[name="roles"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateSelectedRoles);
+        });
+    });
+</script>
+
+
 </body>
 </html>

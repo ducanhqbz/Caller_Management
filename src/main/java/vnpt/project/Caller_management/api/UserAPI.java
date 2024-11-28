@@ -53,7 +53,7 @@ public ResponseEntity<String> DeleteUser(@PathVariable int id) {
 @RequestMapping(value = "/UpdateUser/{email}", method = RequestMethod.PUT)
     public ResponseEntity<String> UpdateUser(@PathVariable String email, @RequestBody User user) {
         boolean  status = crudServices.Update(email, user.getUsername(),user.getFirstName(),user.getLastName(),user.getDepartmentId());
-    if (status==false){
+    if (status==false){     
         return ResponseEntity.notFound().build();
 
     }

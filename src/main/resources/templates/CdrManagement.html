@@ -50,8 +50,9 @@
                     <button type="button" id="selectFileBtn" class="btn btn-secondary">Choose File</button>
                 </div>
             </form>
-
-            <div class="progress" style="height: 20px;">
+            <button type="button" class="btn btn-primary" id="ExcelButton">Export to <Excel></Excel> File</button>
+            <button type="button" class="btn btn-primary" id="exportButton">Export to CSV File</button>
+            <div id="progressContainer" class="progress" style="height: 20px; display: none">
                 <div id="progressBar" class="progress-bar bg-primary" role="progressbar"
                      style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
             </div>
@@ -76,10 +77,10 @@
                     <td th:text="${cdr.callLength}"></td>
                     <td th:text="${cdr.createdAt}"></td>
                     <td th:text="${cdr.msisdn}"></td>
-<!--                    <td>   <audio controls>-->
-<!--                        <source th:src="${cdr.recordingPath}" type="audio/wav">-->
+                    <td>   <audio controls>
+                        <source th:src="${cdr.recordingPath}" type="audio/wav">
 
-<!--                    </audio></td>-->
+                    </audio></td>
                 </tr>
                 </tbody>
             </table>
@@ -174,7 +175,34 @@
         </div>
     </div>
 </div>
+<div class="modal fade" tabindex="-1" id="Export" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form>
+            <div class="modal-header">
+                <h5 class="modal-title" id="">Modal title</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <label for="directoryPath">Đường dẫn lưu file:</label><br>
+                <input type="text" id="directoryPath" name="directoryPath" placeholder="C:/exports"><br><br>
 
+                <label for="fileName">Tên file:</label><br>
+                <input type="text" id="fileName" name="fileName" placeholder="data.csv"><br><br>
+
+                <select id="dataType" name="dataType">
+                    <option value="csv">CSV</option>
+                    <option value="excel">Excel</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+
+                <button type="Submit" class="btn btn-primary">Confirm</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 </body>
 
@@ -189,14 +217,14 @@
 
     // Chọn tệp và tự động gửi form
     selectFileBtn.onclick = () => fileInput.click();
-    fileInput.onchange = () => {
+    fileInput.onchange = () => { // fileinput onchange là khi có sự thay đổi ở nút chọn file tuc la khi nguoi dung nhap tep
         if (fileInput.files.length > 0) {
             form.dispatchEvent(new Event('submit'));
         }
     };
 
     // Gửi form và bắt đầu theo dõi tiến trình
-    form.onsubmit = function(event) {
+    form.onsubmit = function() {
         event.preventDefault();
 
         const formData = new FormData(form);
@@ -204,39 +232,49 @@
         xhr.open("POST", "/file/csv/upload", true);
         xhr.send(formData);
         startProgressUpdate(); // Bắt đầu cập nhật thanh tiến trình
-
-        xhr.onload = function() {
+        selectFileBtn.disabled = true;
+        document.getElementById("progressContainer").style.display="block";
+        fileInput.disabled = true;
+        xhr.onload = function() { // xhr.onloadd chi dduoc chay khi ket qua tra ve thanh cong tu server
             if (xhr.status === 200) {
                 const response = JSON.parse(xhr.responseText);
                 if (response.status === "success") {
                     alert("Upload thành công!");
+                    setTimeout(() => { location.reload(); }, 1000);
+                    // Reload sau 1 giây
 
                 } else {
                     alert(response.message);
                 }
             }
+            selectFileBtn.disabled = false;
+            fileInput.disabled = false;
         };
-
+        xhr.onerror = function() {
+            alert("Đã xảy ra lỗi trong quá trình upload.");
+            selectFileBtn.disabled = false;
+            fileInput.disabled = false;
+        };
 
     };
 
     // Hàm cập nhật thanh tiến trình
     function startProgressUpdate() {
-        const interval = setInterval(() => {
-            fetch('http://localhost:8080/file/csv/progress')
+        const interval = setInterval(() =>  {
+            fetch('/file/csv/progress')
                 .then(response => response.json())
                 .then(data => {
+                    if (data.progress >= 100) {
+                        clearInterval(interval); // Dừng interval khi đạt 100%
+                        fetch('/file/csv/reload');
+
+                    }
                     console.log("Progress:", data.progress);
                     progressBar.style.width = data.progress + '%';
                     progressBar.textContent = data.progress + '%';
 
                     // Kiểm tra nếu progress đạt 100%
-                    if (data.progress >= 100) {
-                        clearInterval(interval); // Dừng interval khi đạt 100%
-                        fetch('http://localhost:8080/file/csv/Reload');
-                        setTimeout(() => { location.reload(); }, 1000); // Reload sau 1 giây
 
-                    }
                 })
                 .catch(error => {
                     console.error('Error fetching progress:', error);
@@ -247,6 +285,60 @@
 
 
 </script>
+<script>
+    document.getElementById("ExcelButton").addEventListener("click", function() {
+        // Gửi yêu cầu tới server để tạo file
+        fetch('/file/csv/exportExcel', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.file);
+                // Khi nhận được phản hồi từ server, tạo URL từ Blob để tải file xuống
+                const url = data.file;// tạo nên url với nội dung la t
+                const a = document.createElement("a"); // tao thẻ a
 
+                // Thiết lập tên file tải xuống
+                a.href = url;
+                a.download = `books.xlsx`; // Đặt tên file
+
+                // Thêm thẻ <a> vào DOM và kích hoạt sự kiện click để tải file
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                // Giải phóng URL sau khi hoàn tất
+                URL.revokeObjectURL(url);
+
+            })
+            .catch(error => console.error("Error:", error));
+    });
+</script>
+<script>
+    document.getElementById("exportButton").addEventListener("click", function() {
+        // Gửi yêu cầu tới server để tạo file
+        fetch('/file/csv/exportCSV', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.file)
+                // Khi nhận được phản hồi từ server, tạo URL từ Blob để tải file xuống
+                const url = data.file;// tạo nên url với nội dung la t
+                const a = document.createElement("a"); // tao thẻ a
+
+                // Thiết lập tên file tải xuống
+                a.href = url;
+                a.download = `server_generated_file.csv`; // Đặt tên file
+
+                // Thêm thẻ <a> vào DOM và kích hoạt sự kiện click để tải file
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                // Giải phóng URL sau khi hoàn tất
+                URL.revokeObjectURL(url);
+
+            })
+            .catch(error => console.error("Error:", error));
+    });
+</script>
+</body>
 
 </html>
